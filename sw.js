@@ -1,6 +1,6 @@
 /* Åantiye Åefi â€” Ã§evrimdÄ±ÅŸÄ± Ã§alÄ±ÅŸma iÃ§in servis Ã§alÄ±ÅŸanÄ± (service worker)
    Strateji: Ã¶nce Ã¶nbellek, arkadan gÃ¼ncelle (stale-while-revalidate). Ä°lk aÃ§Ä±lÄ±ÅŸtan sonra internetsiz Ã§alÄ±ÅŸÄ±r. */
-const VERSION = 'santiye-sefi-20261117-130909';
+const VERSION = 'santiye-sefi-20261117-141305';
 const ASSETS = [
   './', 'index.html', 'manifest.webmanifest',
   'css/app.css', 'css/modules.css',

@@ -5,7 +5,8 @@
   SS.css(`
   .ai-grid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(300px,1fr);gap:16px;align-items:start}
   .chat{display:flex;flex-direction:column;height:calc(100vh - 230px);min-height:520px;overflow:hidden}
-  .chat-scroll{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:14px;scroll-behavior:smooth}
+  .chat>.region{flex:1;min-height:0;overflow:hidden}
+  .chat-scroll{flex:1;min-height:0;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:14px;scroll-behavior:smooth;overscroll-behavior:contain}
   .msg{display:flex;gap:10px;max-width:92%;animation:rise .35s var(--ease) both}.msg.me{align-self:flex-end;flex-direction:row-reverse}
   .msg .bub{padding:11px 14px;border-radius:16px;line-height:1.55;font-size:14.5px;min-width:0}.msg.bot .bub{background:var(--surface-2);border:1px solid var(--line);border-top-left-radius:5px}
   .msg.me .bub{background:var(--brand);color:var(--brand-ink);border-top-right-radius:5px;font-weight:550}
@@ -23,7 +24,8 @@
   .ins-list{display:flex;flex-direction:column;gap:10px}.ins-card{padding:14px;display:flex;gap:12px;align-items:flex-start;border-left:4px solid var(--line)}.ins-card.bad{border-left-color:var(--bad)}.ins-card.warn{border-left-color:var(--warn)}.ins-card.ok{border-left-color:var(--ok)}.ins-card.info{border-left-color:var(--info)}
   .ins-card .kpi-ic{width:36px;height:36px;margin:0}.ins-card b{font-size:14px;line-height:1.35;display:block}.ins-card p{font-size:13px;color:var(--muted);margin-top:3px;line-height:1.4}.ins-card a{font-size:13px;font-weight:650;color:var(--brand-text);display:inline-flex;gap:2px;align-items:center;margin-top:6px}
   .priv{display:flex;gap:8px;align-items:center;font-size:12.5px;color:var(--muted);padding:2px 4px}.priv .ic{width:15px;height:15px}
-  @media(max-width:1099px){.ai-grid{grid-template-columns:1fr}.chat{height:calc(100vh - 200px)}.ai-side{order:-1}}
+  @media(max-width:1099px){.ai-grid{grid-template-columns:minmax(0,1fr)}.chat{height:calc(100vh - 190px);min-height:480px}}
+  @media(max-width:699px){.chips{flex-wrap:nowrap;overflow-x:auto;padding-bottom:10px;scrollbar-width:none}.chips::-webkit-scrollbar{display:none}.chips .chip{flex:none}}
   `);
 
   /* ---------- çözümleme yardımcıları ---------- */
