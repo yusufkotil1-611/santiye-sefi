@@ -1,0 +1,25 @@
+{
+  "name": "Şantiye Şefi",
+  "short_name": "Şantiye Şefi",
+  "description": "Şantiye, finans, stok, personel ve satış yönetimi tek merkezde.",
+  "lang": "tr",
+  "dir": "ltr",
+  "start_url": "./index.html",
+  "scope": "./",
+  "id": "./index.html",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f4f3ef",
+  "theme_color": "#c2500a",
+  "categories": ["business", "productivity"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Harcama Gir", "url": "./index.html#/expenses", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Puantaj Al", "url": "./index.html#/workforce", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Stok Durumu", "url": "./index.html#/stock", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] }
+  ]
+}
