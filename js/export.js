@@ -16,7 +16,7 @@
     ${def.sections.map((s) => `<section class="rp-s">${s.heading ? `<h3>${esc(s.heading)}</h3>` : ''}
       ${s.kpis ? `<div class="rp-kpis">${s.kpis.map(([k, v]) => `<div><small>${esc(k)}</small><b>${esc(v)}</b></div>`).join('')}</div>` : ''}
       ${s.cols ? `<table><thead><tr>${s.cols.map((c) => `<th class="${c.num || c.money ? 'r' : ''}">${esc(c.h)}</th>`).join('')}</tr></thead>
-      <tbody>${s.rows.length ? s.rows.map((r) => `<tr>${r.map((v, i) => `<td class="${s.cols[i].num || s.cols[i].money ? 'r' : ''}">${esc(cell(v, s.cols[i]))}</td>`).join('')}</tr>`).join('') : `<tr><td colspan="${s.cols.length}" class="c">Kayıt yok</td></tr>`}</tbody>
+      <tbody>${s.rows.length ? s.rows.map((r) => `<tr${s.rowH ? ` style="height:${s.rowH}px"` : ''}>${r.map((v, i) => `<td class="${s.cols[i].num || s.cols[i].money ? 'r' : ''}">${esc(cell(v, s.cols[i]))}</td>`).join('')}</tr>`).join('') : `<tr><td colspan="${s.cols.length}" class="c">Kayıt yok</td></tr>`}</tbody>
       ${s.totals ? `<tfoot><tr>${s.totals.map((v, i) => `<td class="${s.cols[i].num || s.cols[i].money ? 'r' : ''}">${esc(cell(v, s.cols[i]))}</td>`).join('')}</tr></tfoot>` : ''}</table>` : ''}
       ${s.note ? `<p class="rp-note">${esc(s.note)}</p>` : ''}</section>`).join('')}
     <div class="rp-f"><span>Bu rapor Şantiye Şefi tarafından ${U.fmtDate(U.today())} tarihinde oluşturulmuştur.</span><span class="sign">Şantiye Şefi İmza: ____________________</span></div>

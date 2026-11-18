@@ -182,7 +182,7 @@ button { font: inherit; color: inherit; }
 .chip:hover { border-color: var(--brand); color: var(--brand-text); background: var(--brand-soft); }
 .bar { height: 8px; background: var(--track); border-radius: 99px; overflow: hidden; }
 .bar.lg { height: 12px; } .bar.sm { height: 6px; }
-.bar > i { display: block; height: 100%; border-radius: 99px; transform-origin: left; animation: grow .95s var(--ease) both; background: var(--brand); }
+.bar > i { display: block; padding: 0; gap: 0; height: 100%; border-radius: 99px; transform-origin: left; animation: grow .95s var(--ease) both; background: var(--brand); }
 .bar > i.ok { background: var(--ok); } .bar > i.warn { background: var(--warn); } .bar > i.bad { background: var(--bad); } .bar > i.info { background: var(--info); } .bar > i.muted { background: var(--muted); }
 .tabs { display: flex; gap: 4px; padding: 4px; background: var(--track); border-radius: 14px; overflow-x: auto; scrollbar-width: none; max-width: 100%; align-self: flex-start; }
 .tabs::-webkit-scrollbar { display: none; }

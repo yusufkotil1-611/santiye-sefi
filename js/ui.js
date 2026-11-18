@@ -84,21 +84,31 @@
     cursor: 'M5 3l14 7-6 2-2 6z',
     link: 'M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1',
     copy: 'M8 8h12v12H8zM16 8V4H4v12h4',
+    cube: 'M12 3 4 7.5v9L12 21l8-4.5v-9zM4 7.5 12 12l8-4.5M12 12v9',
+    mic: 'M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3zM5 11a7 7 0 0 0 14 0M12 18v3M9 21h6',
+    bolt: 'M13 3 5 14h6l-1 7 8-11h-6z',
+    thermo: 'M10 14.5V5a2 2 0 0 1 4 0v9.5a4 4 0 1 1-4 0z',
+    drop: 'M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z',
+    refresh: 'M20 12a8 8 0 1 1-2.5-5.8M20 4v5h-5',
+    fog: 'M5 8h14M3 12h18M6 16h12M9 20h6',
+    calculator: 'M6 3h12a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zM8 7h8M8 11h.01M12 11h.01M16 11h.01M8 15h.01M12 15h.01M16 15h.01M8 18h.01M12 18h.01M16 18h.01',
+    cart: 'M3 4h2.2l2.3 11h11L20.5 7H6.2M9.5 20h.01M17 20h.01',
   };
   ui.icon = (n, cls = '') => `<svg class="ic ic-${n} ${cls}" viewBox="0 0 24 24" aria-hidden="true"><path d="${ICONS[n] || ICONS.info}"/></svg>`;
   const I = ui.icon;
 
   /* ---------------- navigasyon ---------------- */
   const NAV = [
-    { g: 'Genel', items: [{ id: 'dashboard', t: 'Ana Sayfa', i: 'home' }, { id: 'projects', t: 'Projeler', i: 'building' }] },
+    { g: 'Genel', items: [{ id: 'dashboard', t: 'Ana Sayfa', i: 'home' }, { id: 'projects', t: 'Projeler', i: 'building' }, { id: 'todos', t: 'Görevler', i: 'check' }] },
     { g: 'Finans & Satış', items: [
       { id: 'expenses', t: 'Harcama & Ödeme', i: 'receipt' }, { id: 'hakedis', t: 'Hakediş', i: 'clipboard' },
       { id: 'contracts', t: 'Sözleşmeler', i: 'file' }, { id: 'sales', t: 'Satış & Tahsilat', i: 'tag' }] },
     { g: 'Saha Operasyonu', items: [
-      { id: 'workforce', t: 'Personel & Puantaj', i: 'users' }, { id: 'stock', t: 'Stok & Malzeme', i: 'box' },
-      { id: 'diary', t: 'Şantiye Defteri', i: 'book' }, { id: 'safety', t: 'İSG & Kalite', i: 'shield' }, { id: 'machines', t: 'Makine Parkı', i: 'truck' }] },
-    { g: 'Analiz', items: [
-      { id: 'dwg', t: 'Çizim Görüntüleyici', i: 'layers' }, { id: 'ai', t: 'Şantiye AI', i: 'sparkles' }, { id: 'reports', t: 'Raporlar', i: 'chart' }] },
+      { id: 'workforce', t: 'Personel & Puantaj', i: 'users' }, { id: 'stock', t: 'Stok & Malzeme', i: 'box' }, { id: 'orders', t: 'Satın Alma', i: 'cart' },
+      { id: 'concrete', t: 'Beton & Numune', i: 'cube' }, { id: 'diary', t: 'Şantiye Defteri', i: 'book' }, { id: 'safety', t: 'İSG & Kalite', i: 'shield' }, { id: 'machines', t: 'Makine Parkı', i: 'truck' }] },
+    { g: 'Analiz & Araçlar', items: [
+      { id: 'ai', t: 'Şantiye AI', i: 'sparkles' }, { id: 'guide', t: 'Rehber & Hesaplar', i: 'calculator' }, { id: 'forms', t: 'Form & Tutanaklar', i: 'note' },
+      { id: 'dwg', t: 'Çizim Görüntüleyici', i: 'layers' }, { id: 'reports', t: 'Raporlar', i: 'chart' }] },
   ];
   ui.NAV = NAV;
   const flatNav = NAV.flatMap((g) => g.items);
@@ -111,13 +121,14 @@
 
   ui.shell = function () {
     const badges = SS.calc.badges();
+    const CLOUD = !!(SS.cloud && SS.cloud.enabled);
     $('#app').innerHTML = `
     <div class="app ${SS.cfg.sidebar ? 'collapsed' : ''}" id="appRoot">
       <aside class="sidebar" id="sidebar" aria-label="Ana menü">
         <div class="brand"><span class="logo">${logoSvg()}</span><span class="brand-t"><b>Şantiye Şefi</b><small>Saha yönetim merkezi</small></span>
           <button class="icon-btn side-collapse" data-action="side.collapse" title="Menüyü daralt">${I('chevL')}</button></div>
         <nav class="nav" id="navList">${NAV.map((g) => `<div class="nav-g"><div class="nav-gt">${g.g}</div>${g.items.map((it) => navItem(it, badges)).join('')}</div>`).join('')}</nav>
-        <div class="side-foot"><a class="nav-i" href="#/settings" data-route="settings">${I('gear')}<span class="nav-t">Ayarlar & Yedek</span></a>
+        <div class="side-foot">${CLOUD ? `<a class="nav-i" href="#/account" data-route="account">${I('users')}<span class="nav-t">Hesap & Lisans</span></a>` : ''}<a class="nav-i" href="#/settings" data-route="settings">${I('gear')}<span class="nav-t">Ayarlar & Yedek</span></a>
           <div class="me"><span class="av">${U.initials(SS.cfg.user)}</span><span class="me-t"><b>${esc(SS.cfg.user)}</b><small>${esc(SS.cfg.company)}</small></span></div></div>
       </aside>
       <div class="scrim nav-scrim" data-action="side.close"></div>
@@ -126,7 +137,10 @@
           <button class="icon-btn hamb" data-action="side.open" aria-label="Menü">${I('menu')}</button>
           <div class="tb-title"><h1 id="tbTitle">Ana Sayfa</h1></div>
           <div class="tb-right">
-            <label class="proj-sel" title="Şantiye seç">${I('building')}<select id="projSel" aria-label="Şantiye seç"></select></label>
+            <button class="proj-btn" id="projBtn" data-action="proj.panel" aria-haspopup="dialog" aria-expanded="false" title="Şantiye seç"><span class="pb-ic">${I('building')}<i class="pb-st"></i></span><span class="pb-t"><small>Şantiye</small><b id="projBtnName">Tüm Şantiyeler</b></span>${I('chevD')}</button>
+            ${CLOUD ? `<button class="icon-btn sync-btn" id="syncBtn" data-action="acct.open" data-state="idle" title="Eşitleme durumu" aria-label="Eşitleme durumu">${I('refresh')}<em class="sync-n"></em></button>` : ''}
+            <button class="icon-btn" data-action="pal.open" title="Ara (Ctrl+K)" aria-label="Ara">${I('search')}</button>
+            <button class="icon-btn bell" id="bellBtn" data-action="bell.open" title="Uyarılar" aria-label="Uyarılar">${I('bell')}<em class="bell-n"></em></button>
             <button class="icon-btn" id="soundBtn" data-action="sound.toggle" title="Ses efektleri">${I(SS.cfg.sound ? 'volume' : 'mute')}</button>
             <button class="icon-btn" id="themeBtn" data-action="theme.toggle" title="Tema">${I('moon')}</button>
             <button class="btn primary quick" data-action="quick.open">${I('plus')}<span>Hızlı Ekle</span></button>
@@ -136,12 +150,14 @@
       </div>
       <nav class="bottomnav" id="bottomNav" aria-label="Alt menü">
         ${BOTTOM.map((id) => { const it = flatNav.find((x) => x.id === id); return `<a class="bn-i" href="#/${id}" data-route="${id}">${I(it.i)}<span>${esc(it.t.split(' ')[0] === 'Ana' ? 'Panel' : it.t.split(' ')[0])}</span></a>`; }).join('')}
-        <button class="bn-i bn-more" data-action="more.open">${I('grid')}<span>Menü</span></button>
+        <button class="bn-i bn-more" data-action="more.open">${I('grid')}${CLOUD ? '<i class="sync-dot"></i>' : ''}<span>Menü</span></button>
       </nav>
     </div>
     <div id="layers"></div><div id="toasts" aria-live="polite"></div><div id="tip" role="tooltip"></div>`;
     ui.fillProjSel();
     ui.applyTheme();
+    if (ui.updateBell) ui.updateBell();
+    if (CLOUD && SS.cloud.onStatus) SS.cloud.onStatus(SS.cloud.status);   // yeniden çizilen kabukta eşitleme düğmesini güncel durumla doldur
   };
 
   function logoSvg() {
@@ -223,7 +239,9 @@
   };
   ui.tabs = (view, key, items, cur) => `<div class="tabs" role="tablist">${items.map(([v, l, n]) => `<button role="tab" class="tab ${v === cur ? 'on' : ''}" aria-selected="${v === cur}" data-action="vs.set" data-view="${view}" data-key="${key}" data-val="${v}">${l}${n != null ? `<em>${n}</em>` : ''}</button>`).join('')}</div>`;
   ui.seg = (view, key, items, cur) => `<div class="seg" role="group">${items.map(([v, l]) => `<button class="${v === cur ? 'on' : ''}" aria-pressed="${v === cur}" data-action="vs.set" data-view="${view}" data-key="${key}" data-val="${v}">${l}</button>`).join('')}</div>`;
-  ui.vs = (view, def = {}) => (SS.vs[view] = Object.assign({}, def, SS.vs[view]));
+  /* Görünüm durumu: AYNI nesneyi döndürür (eskiden her çağrıda kopyalanıyordu; bu yüzden eski referanslar üzerinde yapılan
+     değişiklikler — örn. AI sohbetindeki "busy" bayrağı — kayboluyordu). Eksik varsayılanlar yerinde tamamlanır. */
+  ui.vs = (view, def = {}) => { const cur = SS.vs[view] || (SS.vs[view] = {}); for (const k in def) if (!(k in cur)) cur[k] = def[k]; return cur; };
   ui.projectName = (id) => (SS.D.projects.find((p) => p.id === id) || {}).shortName || '—';
   ui.firmName = (id) => (SS.D.firms.find((f) => f.id === id) || {}).name || '—';
   ui.opts = (arr, cur) => arr.map((o) => { const [v, l] = Array.isArray(o) ? o : [o, o]; return `<option value="${esc(v)}" ${String(v) === String(cur) ? 'selected' : ''}>${esc(l)}</option>`; }).join('');
@@ -418,6 +436,19 @@
     ui.sheet({ title: esc(caption || 'Görsel'), wide: true, noFocus: true, body: `<img class="lightbox-img" src="${u}" alt="">` });
   };
 
+  ui.NEEDS_PROJECT = new Set(['exp.new', 'stock.in', 'stock.out', 'mat.new', 'wf.today', 'wk.new', 'diary.new', 'safety.check', 'punch.new', 'mach.log', 'mach.new', 'ct.new', 'hk.new', 'unit.new', 'dwg.upload', 'concrete.new', 'order.new']);
+
+  /* ---------------- paylaşım yardımcıları ---------------- */
+  ui.copy = (text, msg = 'Kopyalandı') => { try { navigator.clipboard.writeText(text).then(() => ui.toast(msg), () => ui.toast('Kopyalanamadı', 'bad')); } catch (e) { ui.toast('Kopyalanamadı', 'bad'); } };
+  /* Türkiye telefon numarasını WhatsApp biçimine (90…) çevirir */
+  ui.waNumber = (ph) => { let d = String(ph || '').replace(/\D/g, ''); if (d.startsWith('0')) d = '90' + d.slice(1); else if (d.length === 10) d = '90' + d; return d.length >= 11 ? d : ''; };
+  ui.share = (text, phone) => {
+    if (phone && ui.waNumber(phone) && !ui.isApp()) { window.open(`https://wa.me/${ui.waNumber(phone)}?text=${encodeURIComponent(text)}`, '_blank', 'noopener'); return; }
+    if (navigator.share) { navigator.share({ text }).catch(() => {}); return; }
+    if (!ui.isApp()) { window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank', 'noopener'); return; }
+    ui.copy(text, 'Metin kopyalandı — istediğiniz uygulamaya yapıştırın');
+  };
+
   /* ---------------- genel olay yönlendirme ---------------- */
   SS.actions['vs.set'] = (el) => { const d = el.dataset; ui.vs(d.view)[d.key] = d.val; ui.rerender(); };
   SS.actions['side.open'] = () => $('#appRoot').classList.add('nav-open');
@@ -427,7 +458,7 @@
   SS.actions['theme.toggle'] = () => { const cur = document.documentElement.dataset.theme; SS.cfg.theme = cur === 'dark' ? 'light' : 'dark'; SS.store.save(); ui.applyTheme(); ui.rerender(); };
   SS.actions.go = (el) => ui.go(el.dataset.to);
   SS.actions['more.open'] = () => {
-    ui.sheet({ title: 'Tüm Modüller', cls: 'menu-sheet', noFocus: true, body: `<div class="more-grid">${flatNav.concat([{ id: 'settings', t: 'Ayarlar', i: 'gear' }]).map((it) => `<a class="more-i" href="#/${it.id}" data-sheet-close>${I(it.i)}<span>${esc(it.t)}</span></a>`).join('')}</div>` });
+    ui.sheet({ title: 'Tüm Modüller', cls: 'menu-sheet', noFocus: true, body: `<div class="more-grid">${flatNav.concat(SS.cloud && SS.cloud.enabled ? [{ id: 'account', t: 'Hesap & Lisans', i: 'users' }] : [], [{ id: 'settings', t: 'Ayarlar', i: 'gear' }]).map((it) => `<a class="more-i" href="#/${it.id}" data-sheet-close>${I(it.i)}<span>${esc(it.t)}</span></a>`).join('')}</div>` });
   };
   SS.actions['quick.open'] = () => {
     const q = [
@@ -445,6 +476,8 @@
     if (el) {
       const fn = SS.actions[el.dataset.action];
       if (!fn) { console.warn('Eylem yok:', el.dataset.action); return; }
+      /* Şantiye tanımlı değilken kayıt ekleme eylemleri: önce şantiye eklemeye yönlendir */
+      if (ui.NEEDS_PROJECT.has(el.dataset.action) && !SS.D.projects.length) { e.preventDefault(); ui.toast('Önce ilk şantiyenizi ekleyin', 'info'); SS.actions['proj.new'](); return; }
       if (el.tagName === 'A' && !el.getAttribute('href')?.startsWith('#/')) e.preventDefault();
       SS.sound.click(); fn(el, e); return;
     }

@@ -61,7 +61,7 @@
       sections: [{ heading: 'Makine durumu (son 30 gün)', cols: [T('Makine'), T('Tür'), T('Mülkiyet'), N('Sayaç (sa)'), N('30 gün çalışma (sa)'), N('Yakıt (lt)'), M('Yakıt tutarı'), N('Sonraki bakım (sa)'), N('Kalan (sa)'), T('Durum')], rows: rows.map((m) => { const l = SS.D.machineLogs.filter((x) => x.machineId === m.id && x.date >= from), fuel = U.sum(l, (x) => x.fuel); return [m.name, m.type, m.own, m.hours, U.sum(l, (x) => x.hours), fuel, fuel * SS.cfg.fuelPrice, C.machineNext(m) ?? '—', C.machineRemain(m) ?? '—', m.status]; }) }] };
   };
   R.dailyReport = (date, pid) => {
-    const p = pid || (C.active() !== 'all' ? C.active() : (SS.D.projects.find((x) => x.status === 'active') || SS.D.projects[0]).id), dr = SS.D.diary.find((d) => d.date === date && d.projectId === p);
+    const p = pid || (C.active() !== 'all' ? C.active() : ((SS.D.projects.find((x) => x.status === 'active') || SS.D.projects[0] || {}).id || '')), dr = SS.D.diary.find((d) => d.date === date && d.projectId === p);
     const ws = SS.D.workers.filter((w) => w.projectId === p && w.active !== false), day = SS.D.attendance[date] || {}, mats = SS.D.movements.filter((m) => m.projectId === p && m.date === date), exp = SS.D.expenses.filter((e) => e.projectId === p && e.date === date), sf = SS.D.safety.find((s) => s.projectId === p && s.date === date);
     const present = ws.filter((w) => ['T', 'Y', 'FM'].includes(day[w.id]));
     return { title: 'Günlük Şantiye Raporu', project: ui.projectName(p), meta: [['Tarih', `${U.fmtDate(date)} ${U.dayName(date)}`], ['Hazırlayan', SS.cfg.user]],

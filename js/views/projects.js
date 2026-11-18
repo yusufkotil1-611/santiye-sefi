@@ -20,6 +20,20 @@
   .frow:first-of-type{border-top:0}.frow span{font-weight:600;font-size:14px}.frow b{text-align:right;font-variant-numeric:tabular-nums}
   .frow input[type=range]{width:100%;accent-color:var(--brand);height:28px;margin:0}
   .star{color:var(--warn);display:inline-flex;vertical-align:middle}.star .ic{width:15px;height:15px;fill:currentColor}
+
+  .gantt{padding:16px 18px 18px;overflow:hidden}.gantt h3{font-size:15.5px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+  .g-scroll{overflow-x:auto;padding-bottom:4px}.g-in{min-width:640px}
+  .g-head,.g-row{display:grid;grid-template-columns:190px 1fr;gap:10px;align-items:center}.g-head{font-size:11.5px;color:var(--muted);font-weight:700;border-bottom:1px solid var(--line);padding-bottom:6px;margin-bottom:4px}
+  .g-months{position:relative;height:16px}.g-months span{position:absolute;transform:translateX(0);white-space:nowrap}
+  .g-row{padding:5px 0;border-bottom:1px dashed var(--line-2)}.g-row:last-child{border-bottom:0}
+  .g-name{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.g-name .ic{width:13px;height:13px;color:var(--bad);vertical-align:-2px;margin-right:3px}
+  .g-t{position:relative;height:20px;background:repeating-linear-gradient(90deg,transparent 0 calc(25% - 1px),var(--line-2) calc(25% - 1px) 25%)}
+  .g-b{position:absolute;top:3px;height:14px;border-radius:7px;background:color-mix(in srgb,var(--info) 30%,var(--surface));border:1.5px solid var(--info);overflow:hidden}.g-b.crit{background:color-mix(in srgb,var(--brand) 25%,var(--surface));border-color:var(--brand)}.g-b.late{background:color-mix(in srgb,var(--bad) 22%,var(--surface));border-color:var(--bad)}.g-b.ok{background:color-mix(in srgb,var(--ok) 25%,var(--surface));border-color:var(--ok)}
+  .g-b i{display:block;height:100%;background:currentColor;opacity:.45;color:var(--info)}.g-b.crit i{color:var(--brand)}.g-b.late i{color:var(--bad)}.g-b.ok i{color:var(--ok)}
+  .g-td{position:absolute;top:-6px;bottom:-6px;width:2px;background:var(--bad);z-index:2;border-radius:2px}
+  .g-leg{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:10px}.g-leg i{display:inline-block;width:12px;height:8px;border-radius:4px;margin-right:5px;border:1.5px solid}
+  .fc{padding:16px 18px;display:flex;gap:16px;align-items:center;flex-wrap:wrap}.fc .kpi-ic{margin:0}.fc-n{flex:1;min-width:220px}.fc-n b{font-size:15px}.fc-n p{color:var(--muted);font-size:13px;margin-top:2px}.fc-bars{flex:2;min-width:240px;display:flex;flex-direction:column;gap:6px}.fc-bars .row{font-size:12.5px;gap:8px}.fc-bars .row span{width:92px;color:var(--muted)}.fc-bars .bar{flex:1}
+  @media(max-width:699px){.g-head,.g-row{grid-template-columns:120px 1fr}}
   @media(max-width:699px){.pcards{grid-template-columns:1fr}.budrow{grid-template-columns:1fr auto}.budrow .bar{grid-column:1/-1;order:3}.ph{padding:16px}}
   `);
 
@@ -28,6 +42,28 @@
 
   function pbar(pg, pl) {
     return `<div class="pbar"><div class="pbar-l"><span>Fiziksel ilerleme</span><b>%${U.num(pg, 1)}</b></div><div class="pbar-t">${ui.bar(pg, 'brand', 'lg')}${pl != null ? `<span class="pmark" style="left:calc(${pl}% - 1px)" data-tip="Planlanan: %${U.num(pl)}"></span>` : ''}</div></div>`;
+  }
+
+
+  /* ---------------- zaman çizelgesi (Gantt) ---------------- */
+  function gantt(p) {
+    const tasks = SS.D.tasks.filter((t) => t.projectId === p.id && t.start && t.end).sort((a, b) => a.start.localeCompare(b.start)), today = U.today();
+    if (!tasks.length) return '';
+    const lo = [today, ...tasks.map((t) => t.start)].sort()[0], hi = [today, ...tasks.map((t) => t.end)].sort().slice(-1)[0], total = Math.max(1, U.diff(lo, hi));
+    const pos = (d) => U.clamp((U.diff(lo, d) / total) * 100, 0, 100);
+    const months = []; for (let k = U.monthKey(lo); k <= U.monthKey(hi); k = U.monthKey(U.addMonths(U.monthStart(k), 1))) months.push(k);
+    const cls = (t) => (t.progress >= 100 ? 'ok' : t.end < today ? 'late' : t.critical ? 'crit' : '');
+    return `<div class="card gantt"><h3><span>Zaman Çizelgesi</span><span class="sub">${U.fmtDate(lo)} → ${U.fmtDate(hi)} · kırmızı çizgi bugün</span></h3><div class="g-scroll"><div class="g-in">
+      <div class="g-head"><span>İş kalemi</span><div class="g-months">${months.map((m) => `<span style="left:${pos(U.monthStart(m) < lo ? lo : U.monthStart(m))}%">${U.monthShort(m)}</span>`).join('')}</div></div>
+      ${tasks.map((t) => `<div class="g-row" data-action="task.edit" data-id="${t.id}" style="cursor:pointer"><div class="g-name" title="${esc(t.name)}">${t.critical ? I('flag') : ''}${esc(t.name)}</div><div class="g-t"><span class="g-td" style="left:${pos(today)}%"></span><div class="g-b ${cls(t)}" style="left:${pos(t.start)}%;width:${Math.max(1.2, pos(t.end) - pos(t.start))}%" data-tip="${esc(t.name)}\n${U.fmtDate(t.start)} → ${U.fmtDate(t.end)} · %${t.progress}"><i style="width:${t.progress}%"></i></div></div></div>`).join('')}
+      </div></div><div class="g-leg"><span><i style="border-color:var(--info)"></i>Normal</span><span><i style="border-color:var(--brand)"></i>Kritik</span><span><i style="border-color:var(--bad)"></i>Gecikmiş</span><span><i style="border-color:var(--ok)"></i>Tamamlandı</span></div></div>`;
+  }
+  /* ---------------- maliyet projeksiyonu ---------------- */
+  function forecastCard(p) {
+    const f = C.forecast(p); if (!f) return '';
+    const mx = Math.max(p.totalBudget, f.eac), bad = f.over > 0;
+    return `<div class="card fc"><span class="kpi-ic tone-${bad ? 'bad' : 'ok'}">${I('trend')}</span><div class="fc-n"><b>Tahmini bitiş maliyeti: ${U.compact(f.eac)}</b><p>${bad ? `Bu hızla bütçe <b class="neg">%${U.num(f.pct)} (${U.compact(f.over)}) aşılabilir</b>` : `Bu hızla bütçe içinde kalınıyor (<b class="pos">${U.compact(-f.over)} marj</b>)`} · harcanan ÷ ilerleme (%${U.num(f.prog, 1)})</p></div>
+      <div class="fc-bars"><div class="row"><span>Bütçe</span>${ui.bar((p.totalBudget / mx) * 100, 'info')}<b>${U.compact(p.totalBudget)}</b></div><div class="row"><span>Harcanan</span>${ui.bar((f.spent / mx) * 100, 'brand')}<b>${U.compact(f.spent)}</b></div><div class="row"><span>Tahmini bitiş</span>${ui.bar((f.eac / mx) * 100, bad ? 'bad' : 'ok')}<b>${U.compact(f.eac)}</b></div></div></div>`;
   }
 
   /* ---------------- liste ---------------- */
@@ -63,7 +99,7 @@
       { h: 'Durum', c: (t) => ui.badge(C.taskStatus(t), stTone[C.taskStatus(t)]) },
       { h: '', act: true, c: (t) => `<button class="btn sm ghost" data-action="task.edit" data-id="${t.id}">${I('edit')}Düzenle</button>` },
     ], rows: tasks, empty: 'Henüz iş kalemi yok' });
-    return `<div class="card">${`<div class="card-h"><h3>Kritik İş Kalemleri</h3><button class="btn sm primary" data-action="task.new" data-pid="${p.id}">${I('plus')}İş kalemi</button></div><div class="card-b" style="padding-left:0;padding-right:0">${tb}</div>`}</div>`;
+    return gantt(p) + `<div class="card">${`<div class="card-h"><h3>Kritik İş Kalemleri</h3><button class="btn sm primary" data-action="task.new" data-pid="${p.id}">${I('plus')}İş kalemi</button></div><div class="card-b" style="padding-left:0;padding-right:0">${tb}</div>`}</div>`;
   }
   function blocksView(p) {
     if (!(p.blocks || []).length) return `<div class="card pad">${ui.empty('building', 'Blok / kat tanımı yok', 'İlerlemeyi blok ve kat bazında izlemek için blok ekleyin.', `<button class="btn primary" data-action="blk.new" data-pid="${p.id}">${I('plus')}Blok Ekle</button>`)}</div>`;
@@ -75,6 +111,7 @@
     const pg = C.progress(p), pl = C.planned(p), sp = C.spent(p.id), inc = income(p.id), tot = C.catTotals('', '', p.id), s = ST[p.status];
     const recent = SS.D.expenses.filter((e) => e.projectId === p.id).sort((a, b) => b.date.localeCompare(a.date)).slice(0, 6);
     return `<div class="grid g-4 kpis">${ui.kpi({ label: 'Toplam bütçe', value: p.totalBudget, fmt: 'compact', icon: 'wallet', tone: 'info' })}${ui.kpi({ label: 'Harcanan', value: sp, fmt: 'compact', icon: 'receipt', tone: 'brand', sub: `bütçenin %${U.num((sp / (p.totalBudget || 1)) * 100)}'i` })}${ui.kpi({ label: 'Tahsilat / gelir', value: inc, fmt: 'compact', icon: 'trend', tone: 'ok', sub: 'satış taksiti + hakediş' })}${ui.kpi({ label: 'Kalan bütçe', value: p.totalBudget - sp, fmt: 'compact', icon: 'percent', tone: p.totalBudget - sp < 0 ? 'bad' : 'warn', sub: `${Math.max(0, U.diff(U.today(), p.end))} gün kaldı` })}</div>
+    ${forecastCard(p)}
     <div class="grid g-21"><div class="card"><div class="card-h"><h3>Bütçe — Gerçekleşen</h3></div><div class="card-b">${SS.C.cats.map((c) => { const b = (p.budget || {})[c] || 0, v = tot[c] || 0, r = b ? (v / b) * 100 : 0; return `<div class="budrow ${r > 100 ? 'over' : ''}"><span>${c}</span>${ui.bar(r, r > 100 ? 'bad' : 'brand')}<b>${U.compact(v)} <span class="muted">/ ${U.compact(b)}</span></b></div>`; }).join('')}</div></div>
     <div class="card"><div class="card-h"><h3>Son Harcamalar</h3><a class="btn sm ghost" href="#/expenses">Tümü</a></div><div class="card-b">${recent.length ? `<ul class="alist">${recent.map((e) => `<li><div class="a-t" style="padding:6px 8px"><b>${esc(e.desc)}</b><small>${U.fmtDate(e.date)} · ${esc(ui.firmName(e.firmId))}</small></div><b style="padding-right:8px;font-variant-numeric:tabular-nums">${U.compact(e.amount)}</b></li>`).join('')}</ul>` : '<p class="muted">Kayıt yok</p>'}</div></div></div>`;
   }
@@ -98,7 +135,7 @@
     const fields = [
       { name: 'name', label: 'Proje adı', required: true, placeholder: 'ör. Sakarya Vadi Konutları – 3 Blok 48 Daire' }, { name: 'shortName', label: 'Kısa ad', half: true, placeholder: 'Menülerde görünür' },
       { name: 'status', label: 'Durum', type: 'select', options: Object.entries(ST).map(([k, v]) => [k, v[0]]), required: true },
-      { name: 'location', label: 'Konum', half: true, placeholder: 'İlçe / İl' }, { name: 'area', label: 'İnşaat alanı (m²)', type: 'number', min: 0 },
+      { name: 'location', label: 'Konum', half: true, placeholder: 'İlçe / İl' }, { name: 'geoName', label: 'Hava durumu için yer adı (isteğe bağlı)', half: false, placeholder: 'ör. Serdivan, Sakarya — boşsa Konum kullanılır' }, { name: 'area', label: 'İnşaat alanı (m²)', type: 'number', min: 0 },
       { name: 'start', label: 'Başlangıç', type: 'date', required: true }, { name: 'end', label: 'Planlanan bitiş', type: 'date', required: true },
       { name: 'owner', label: 'İşveren / sahip', half: true }, { name: 'totalBudget', label: 'Toplam bütçe (₺)', type: 'money', required: true, min: 0, hint: 'Kategori bütçeleri aşağıda' },
       { type: 'html', html: '<div class="section-t" style="margin:6px 0 0">Kategori bütçeleri (₺)</div>' },
@@ -111,7 +148,7 @@
       danger: e ? { label: 'Şantiyeyi sil', onClick: async (api) => { if (await ui.confirm({ title: 'Şantiye silinsin mi?', text: `<b>${esc(p.name)}</b> ve bağlı tüm harcama, sözleşme, hakediş, stok, satış ve defter kayıtları kalıcı olarak silinir.` })) { SS.store.COLLS.forEach((k) => { SS.D[k] = SS.D[k].filter((x) => x.projectId !== p.id && x.id !== p.id); }); if (SS.cfg.activeProject === p.id) SS.cfg.activeProject = 'all'; SS.store.save(); api.close(); ui.fillProjSel(); ui.go('projects'); ui.toast('Şantiye silindi', 'info'); } } } : null,
       onSubmit(v) {
         const budget = Object.fromEntries(SS.C.cats.map((c, i) => [c, v['b' + i] || 0]));
-        const data = { name: v.name, shortName: v.shortName || v.name.split(/[–-]/)[0].trim(), status: v.status, location: v.location, area: v.area || 0, start: v.start, end: v.end, owner: v.owner, totalBudget: v.totalBudget, budget };
+        const data = { name: v.name, shortName: v.shortName || v.name.split(/[–-]/)[0].trim(), status: v.status, location: v.location, geoName: v.geoName || '', area: v.area || 0, start: v.start, end: v.end, owner: v.owner, totalBudget: v.totalBudget, budget };
         if (e) SS.store.upd('projects', p.id, data); else { const n = SS.store.add('projects', Object.assign(data, { blocks: [], progress: 0 }), 'p'); SS.cfg.activeProject = n.id; }
         ui.fillProjSel(); ui.rerender(); ui.toast(e ? 'Şantiye güncellendi' : 'Şantiye eklendi');
       },

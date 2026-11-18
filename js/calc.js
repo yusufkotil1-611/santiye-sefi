@@ -3,6 +3,7 @@
   const SS = window.SS, U = SS.U;
   const C = (SS.calc = {});
 
+  C.alertHooks = [];   /* diğer modüller (örn. hava durumu) uyarı ekleyebilir: (out, today) => void */
   C.active = () => SS.cfg.activeProject;
   C.scope = (coll) => { const a = C.active(); const r = SS.D[coll]; return a === 'all' ? r : r.filter((x) => x.projectId === a); };
   C.projects = () => { const a = C.active(); return a === 'all' ? SS.D.projects : SS.D.projects.filter((p) => p.id === a); };
@@ -130,6 +131,27 @@
   C.machineRemain = (m) => { const n = C.machineNext(m); return n == null ? null : n - m.hours; };
   C.machineDue = (m) => { const r = C.machineRemain(m); const dd = m.nextServiceDate ? U.diff(U.today(), m.nextServiceDate) : null; return (r != null && r <= 30) || (dd != null && dd <= 7); };
 
+
+  /* ---------- bütçe projeksiyonu (EAC ≈ harcanan ÷ fiziksel ilerleme) ---------- */
+  C.forecast = (p) => {
+    const prog = C.progress(p), spent = C.spent(p.id);
+    if (!p.totalBudget || prog < 3 || spent <= 0) return null;
+    const eac = spent / (prog / 100);
+    return { eac, over: eac - p.totalBudget, pct: (eac / p.totalBudget - 1) * 100, prog, spent };
+  };
+
+  /* ---------- beton numune takibi ---------- */
+  C.concreteTarget = (cls) => { const m = /C\s*(\d+)\s*\/\s*(\d+)/i.exec(cls || ''); return m ? { cyl: +m[1], cube: +m[2] } : null; };
+  C.concreteTests = (c) => [7, 28].map((d) => { const res = c['res' + d] || []; return { day: d, due: U.addDays(c.date, d), done: res.length > 0, res }; });
+  C.concreteVerdict = (c) => {
+    const t = C.concreteTarget(c.cls), r = (c.res28 || []).filter((x) => isFinite(x)); if (!t || !r.length) return null;
+    const mean = U.sum(r) / r.length, min = Math.min(...r);
+    return (r.length >= 3 ? mean >= t.cube + 4 && min >= t.cube - 4 : mean >= t.cube) ? 'ok' : 'bad';
+  };
+  C.nextOrderNo = () => 'TLP-' + String(Math.max(0, ...SS.D.orders.map((o) => parseInt(String(o.no || '').replace(/\D/g, ''), 10) || 0)) + 1).padStart(3, '0');
+  C.orderOpen = (o) => !['Teslim', 'İptal'].includes(o.status);
+  C.todoOpen = (t) => t.status !== 'Bitti';
+
   /* ---------- uyarılar ---------- */
   C.alerts = () => {
     const out = [], today = U.today();
@@ -153,6 +175,20 @@
     const pr = C.presentToday();
     if (pr.total && pr.marked < pr.total && U.dow(today) !== 0) out.push({ mod: 'workforce', level: 'info', icon: 'users', title: 'Bugünün puantajı eksik', text: `${pr.marked}/${pr.total} kişi işaretlendi`, route: 'workforce' });
     const sc = C.scope('safety'); if (C.active() !== 'all' || C.projects().length) { if (!sc.some((s) => s.date === today) && U.dow(today) !== 0) out.push({ mod: 'safety', level: 'info', icon: 'shield', title: 'Günlük İSG kontrolü yapılmadı', text: 'Baret, iskele, korkuluk kontrol listesini doldurun', route: 'safety' }); }
+    C.scope('concrete').forEach((c) => {
+      C.concreteTests(c).filter((t) => !t.done).forEach((t) => { const d = U.diff(today, t.due); if (d <= 3) out.push({ mod: 'concrete', level: d < 0 ? 'bad' : 'warn', icon: 'layers', title: `Beton numune kırımı: ${c.element}`, text: `${t.day}. gün kırımı ${d < 0 ? -d + ' gün gecikti' : d === 0 ? 'bugün' : d + ' gün sonra'} (${U.fmtDate(t.due)})`, route: 'concrete' }); });
+      if (C.concreteVerdict(c) === 'bad') out.push({ mod: 'concrete', level: 'bad', icon: 'alert', title: `Beton sonucu uygun değil: ${c.element}`, text: `${c.cls} için 28 günlük sonuç kriterin altında; yapı denetimi bilgilendirin`, route: 'concrete' });
+    });
+    const lateO = C.scope('orders').filter((o) => C.orderOpen(o) && o.needBy && o.needBy < today);
+    if (lateO.length) out.push({ mod: 'orders', level: 'warn', icon: 'receipt', title: `${lateO.length} sipariş ihtiyaç tarihini geçti`, text: lateO.slice(0, 2).map((o) => o.item).join(' · '), route: 'orders' });
+    const todos = SS.D.todos.filter((t) => C.todoOpen(t) && (C.active() === 'all' || !t.projectId || t.projectId === C.active()));
+    const lateT = todos.filter((t) => t.due && t.due < today), todT = todos.filter((t) => t.due === today);
+    if (lateT.length) out.push({ mod: 'todos', level: 'warn', icon: 'flag', title: `${lateT.length} görev gecikti`, text: lateT.slice(0, 2).map((t) => t.title).join(' · '), route: 'todos' });
+    if (todT.length) out.push({ mod: 'todos', level: 'info', icon: 'check', title: `Bugün ${todT.length} görev var`, text: todT.slice(0, 2).map((t) => t.title).join(' · '), route: 'todos' });
+    if (C.projects().some((p) => p.status === 'active') && U.dow(today) !== 0 && !C.scope('diary').some((d) => d.date === today)) out.push({ mod: 'diary', level: 'info', icon: 'book', title: 'Günlük defter yazılmadı', text: 'Bugünün işlerini, hava durumunu ve iş durmalarını kaydedin', route: 'diary' });
+    const nRec = SS.store.COLLS.reduce((t, k) => t + SS.D[k].length, 0);
+    if (nRec > 25 && (!SS.cfg.lastBackup || U.diff(SS.cfg.lastBackup, today) > 14)) out.push({ mod: 'settings', level: 'info', icon: 'download', title: 'Yedek almayı unutmayın', text: SS.cfg.lastBackup ? `Son yedek ${U.diff(SS.cfg.lastBackup, today)} gün önce alındı` : 'Verileriniz yalnızca bu cihazda saklanıyor; henüz yedek almadınız', route: 'settings' });
+    C.alertHooks.forEach((f) => { try { f(out, today); } catch (e) { console.warn(e); } });
     const lv = { bad: 0, warn: 1, info: 2 };
     return out.sort((a, b) => lv[a.level] - lv[b.level]);
   };
@@ -197,6 +233,13 @@
     const sf = C.scope('safety').sort((x, y) => y.date.localeCompare(x.date))[0];
     if (sf && sf.score < 85) push({ level: 'warn', icon: 'shield', title: `Son İSG kontrol skoru %${sf.score}`, text: 'Uygunsuz maddeleri kapatmak için eksik/kusur kartı açın.', route: 'safety', score: 65 });
     C.scope('machines').filter(C.machineDue).forEach((m) => push({ level: 'warn', icon: 'wrench', title: `${m.name} bakım zamanı yaklaşıyor`, text: `Kalan çalışma: ${U.num(C.machineRemain(m) ?? 0)} saat.`, route: 'machines', score: 55 }));
+    C.projects().filter((p) => p.status === 'active').forEach((p) => { const f = C.forecast(p); if (f && f.pct > 5) push({ level: f.pct > 15 ? 'bad' : 'warn', icon: 'trend', title: `${C.projects().length > 1 ? p.shortName + ': ' : ''}Bu hızla bütçe %${Math.round(f.pct)} aşılabilir`, text: `Tahmini bitiş maliyeti ${U.money(f.eac)}; bütçe ${U.money(p.totalBudget)}.`, route: 'projects/' + p.id, score: 78 }); });
+    const failC = C.scope('concrete').filter((c) => C.concreteVerdict(c) === 'bad');
+    if (failC.length) push({ level: 'bad', icon: 'layers', title: `${failC.length} beton dökümünün 28 gün sonucu uygunsuz`, text: failC.slice(0, 2).map((c) => c.element).join(' · ') + ' — yapı denetim ve laboratuvarla görüşün.', route: 'concrete', score: 88 });
+    const pendC = []; C.scope('concrete').forEach((c) => C.concreteTests(c).filter((t) => !t.done && t.due <= U.addDays(today, 3)).forEach((t) => pendC.push({ c, t })));
+    if (pendC.length) push({ level: 'warn', icon: 'layers', title: `${pendC.length} beton numune kırımı yaklaştı`, text: pendC.slice(0, 2).map((x) => `${x.c.element} (${x.t.day}. gün)`).join(' · '), route: 'concrete', score: 66 });
+    const lateO = C.scope('orders').filter((o) => C.orderOpen(o) && o.needBy && o.needBy < today);
+    if (lateO.length) push({ level: 'warn', icon: 'receipt', title: `${lateO.length} sipariş ihtiyaç tarihini geçti`, text: 'Tedarikçileri arayıp teslim tarihini netleştirin.', route: 'orders', score: 64 });
     const lv = { bad: 0, warn: 1, info: 2, ok: 3 };
     return out.sort((x, y) => lv[x.level] - lv[y.level] || (y.score || 0) - (x.score || 0));
   };

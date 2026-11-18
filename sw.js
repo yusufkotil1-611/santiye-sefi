@@ -1,14 +1,15 @@
 /* Åantiye Åefi â€” Ã§evrimdÄ±ÅŸÄ± Ã§alÄ±ÅŸma iÃ§in servis Ã§alÄ±ÅŸanÄ± (service worker)
    Strateji: Ã¶nce Ã¶nbellek, arkadan gÃ¼ncelle (stale-while-revalidate). Ä°lk aÃ§Ä±lÄ±ÅŸtan sonra internetsiz Ã§alÄ±ÅŸÄ±r. */
-const VERSION = 'santiye-sefi-20261117-141340';
+const VERSION = 'santiye-sefi-20261118-140019';
 const ASSETS = [
   './', 'index.html', 'manifest.webmanifest',
   'css/app.css', 'css/modules.css',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png', 'icons/apple-touch-icon.png', 'icons/favicon.png',
-  'js/util.js', 'js/db.js', 'js/sound.js', 'js/calc.js', 'js/ui.js', 'js/charts.js', 'js/export.js', 'js/seed.js',
-  'js/views/dashboard.js', 'js/views/projects.js', 'js/views/expenses.js', 'js/views/hakedis.js', 'js/views/contracts.js',
+  'js/util.js', 'js/db.js', 'js/sound.js', 'js/calc.js', 'js/ui.js', 'js/charts.js', 'js/export.js', 'js/knowledge.js', 'js/weather.js',
+  'js/config.js', 'js/vendor/supabase.js', 'js/sync-core.js', 'js/cloud.js',
+  'js/views/welcome.js', 'js/views/account.js', 'js/views/dashboard.js', 'js/views/projects.js', 'js/views/expenses.js', 'js/views/hakedis.js', 'js/views/contracts.js',
   'js/views/sales.js', 'js/views/workforce.js', 'js/views/stock.js', 'js/views/diary.js', 'js/views/safety.js',
-  'js/views/machines.js', 'js/views/dwg.js', 'js/views/ai.js', 'js/views/reports.js', 'js/views/settings.js', 'js/app.js',
+  'js/views/machines.js', 'js/views/dwg.js', 'js/views/ai.js', 'js/views/guide.js', 'js/views/reports.js', 'js/views/concrete.js', 'js/views/orders.js', 'js/views/todos.js', 'js/views/forms.js', 'js/views/settings.js', 'js/views/palette.js', 'js/views/projpanel.js', 'js/app.js',
 ];
 
 self.addEventListener('install', (e) => {
